@@ -1,12 +1,92 @@
+#  Nicholas AW Wright
+#  April 2023
+
 # source: https://www.geeksforgeeks.org/permutation-and-combination-in-python/#
 # source: https://stackoverflow.com/questions/2150108/efficient-way-to-rotate-a-list-in-python
-# A Python program to print all
-# permutations using library function
+# A Python program to print all permutations using library function
 from itertools import permutations,product
-# from collections import deque
 import copy
 import time
 
+
+# Program Description
+'''
+This program uses brute force to attempt assembling Pavel's Puzzles' Octamaze octahedron.
+It tests out every possible permutation of 8 pieces in each cartesian product possibility
+of rotations to see if the pieces fit together. If they do fit, the solution is printed out
+and the program continues to run. There is only a single unique assembly solution, but all
+of the possibilities together result in 24 different views of this unique assembly. One can
+visualize this outcome by spinning the octahedron around its vertical axis and realizing that
+each of the four faces could come first in a permutation that satisfies the solution criteria.
+There are 6 corners that could possibly point upwards, each with 4 solution satisfying
+permutations, thus leading to a total of 24 solution satisfying arrays, which are all the 
+same element of a set.
+'''
+
+# Representing the Puzzle Pieces
+'''
+Each of the puzzle piece sides has a small tab, a large tab, a small slot, or a large slot
+Let each of these possible connectors be represented by the numbers 1,2,-1,-2, respectively
+Then, for two connectors to mate as intended, their sum must be zero
+
+We represent the three triangle sides as an array:
+'''
+# [x y z]
+'''
+Where x is the corner to the left, z is the corner to the right, and y is either pointing up or down
+
+If we flip a piece 180deg, such that y goes from pointing up to pointing down, then x and z must swap
+That is:
+
+    (up)     (down)   '''
+# [x y z] = [z y x]
+'''
+So, each of the triangluar puzzle pieces is represented by an list of integers from the set {-2,-1,1,2}
+An example piece is:
+'''
+# p103 = [2, 1,-2]
+'''
+Where the sides corresponding to the written numbers have the connectors large tab, small tab, large slot,
+respectively
+'''
+
+
+# Solution Criteria
+'''
+Let each of the 8 triangular pieces by denoted as the set {A,B,C,...,H}
+An "unwrapped" side view of the solution will look like
+'''
+#  A B C D
+#  E F G H
+'''
+Where A,B,C,D are triangles pointing up and E,F,G,H are triangles pointing down.
+
+For the configuration to be valid assembly solution, the sum of all adjacent connectors must be zero:
+'''
+#  A <--0--> B <--0--> C <--0--> D --0-->
+#  ^         ^         ^         ^
+#  |         |         |         |
+#  0         0         0         0
+#  |         |         |         |
+#  v         v         v         v
+#  E <--0--> F <--0--> G <--0--> H --0-->
+'''
+From the above diagram, it is clear that there are 12 sums that must be zero for a valid solution
+This problem formulation requires rotating the bottom row by 180deg, so let us reformulate:
+'''
+# <--0-- A <--0--> B <--0--> C <--0--> D   |   E <--0--> F <--0--> G <--0--> H --0-->
+#        ^         ^         ^         ^       ^         ^         ^         ^
+#        |         |         |         |___0___|         |         |         |
+#        |         |         |_____________0_____________|         |         |
+#        |         |_______________________0_______________________|         |
+#        |_________________________________0_________________________________|
+'''
+The above formulation maintains the 12 required sums, but avoids having to flip the bottom row
+The letters now refer to different pieces than before, but that is okay as they are just variables
+
+'''
+
+# Used for flipping pieces in place
 def Reverse(pieces):
     for piece in pieces:
         first=piece[0]
@@ -103,9 +183,10 @@ print(f"Total Possibilities = {totalCount}")
 # print(f"total iterations = {layoutCount*spinCount}")
 
 t0 = time.time()
+iterCount = 0
 solCount = 0
 for layout in list(piecePerms):
-    print(f"iteration = {solCount}/{totalCount} ({round(100*solCount/totalCount,2)}%)", end='\r')
+    print(f"iteration = {iterCount}/{totalCount} ({round(100*iterCount/totalCount,2)}%)", end='\r')
     upper = copy.deepcopy(layout[0:4])
     lower = copy.deepcopy(layout[4:8]) 
     # print(f"layout before reverse = {layout}")
@@ -118,7 +199,7 @@ for layout in list(piecePerms):
 
     spinProduct = product('012',repeat=8)
     for orient in spinProduct:
-        solCount += 1
+        iterCount += 1
         tempLayout = copy.deepcopy(reversedLayout)
         # print(f"layout     before spin = {reversedLayout}")
         # print(f"tempLayout before spin = {tempLayout}")
@@ -131,8 +212,10 @@ for layout in list(piecePerms):
         # print(f"layout after spin = {layout}")
         sol = TestSolution(tempLayout)
         if sol: 
+            solCount += 1
             print()
-            print(sol)
+            print(f"Solution #{solCount} = {sol}")
+            print(f"Time to solution #{solCount} = {round(time.time() - t0, 3)} seconds")
             # break
     else:
         # print(spinChecks)
@@ -141,5 +224,5 @@ for layout in list(piecePerms):
 t1 = time.time()
 print(f"Total time for all iterations = {round(t1-t0,3)}s")
 
-# print(f"Stopped on iteration {solCount} out of a total possible {totalCount}")
+# print(f"Stopped on iteration {iterCount} out of a total possible {totalCount}")
 # TODO: compile and run this so that it is much faster
