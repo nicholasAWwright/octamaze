@@ -48,6 +48,14 @@ An example piece is:
 '''
 Where the sides corresponding to the written numbers have the connectors large tab, small tab, large slot,
 respectively
+
+We can also spin each of the pieces independently, such that each has 3 possible representations as follows:
+'''
+# position 0 = [x y z]
+# position 1 = [z x y]
+# position 2 = [y z x]
+'''
+We want to try each permutation of 8 pieces in every cartesian product of possible spin orientations
 '''
 
 
@@ -83,18 +91,9 @@ This problem formulation requires rotating the bottom row by 180deg, so let us r
 '''
 The above formulation maintains the 12 required sums, but avoids having to flip the bottom row
 The letters now refer to different pieces than before, but that is okay as they are just variables
-
 '''
 
-# Used for flipping pieces in place
-def Reverse(pieces):
-    for piece in pieces:
-        first=piece[0]
-        last=piece[2]
-        piece[0]=last
-        piece[2]=first
-    return pieces
-
+# Tests for the solution criteria
 def TestSolution(pieces):
     solved=0
     A=pieces[0]
@@ -107,40 +106,45 @@ def TestSolution(pieces):
     H=pieces[7]
     
     if( A[0] + D[2] == 0 and
-        A[1] + E[1] == 0 and
+        A[1] + H[1] == 0 and
         A[2] + B[0] == 0 and
-        B[1] + F[1] == 0 and
+        B[1] + G[1] == 0 and
         B[2] + C[0] == 0 and
-        C[1] + G[1] == 0 and
+        C[1] + F[1] == 0 and
         C[2] + D[0] == 0 and
-        D[1] + H[1] == 0 and
-        E[0] + H[2] == 0 and
+        D[1] + E[1] == 0 and
         E[2] + F[0] == 0 and
         F[2] + G[0] == 0 and
-        G[2] + H[0] == 0    ):
+        G[2] + H[0] == 0 and
+        H[2] + E[0] == 0    
+        ):
         solved = 1
     if solved: return pieces
     else: return
 
+
+# Function for flipping pieces in place
+# (Problem forumlation updated to avoid flipping)
+def Flip(pieces):
+    for piece in pieces:
+        first=piece[0]
+        last=piece[2]
+        piece[0]=last
+        piece[2]=first
+    return pieces
+
+
+# Function to spin pieces in place
 def Spin(layout,orient):
-    orientElem = 0
-    layoutElem = 0
+    piece = 0
     for i in layout:
-        # print(layoutElem,orientElem)
-        # print()
-        # print(range(int(orient[orientElem])))
-        # print(f"before spin = {layout[layoutElem]}")
-        # print(f"spin = {orient[orientElem]}")
-        for j in range(int(orient[orientElem])):
-            layout[layoutElem].append(layout[layoutElem].pop(0))
-        # numpy.roll(layout[layoutElem],int(orient[orientElem]))
-        # print(f"after spin = {layout[layoutElem]}")
-        layoutElem += 1
-        orientElem += 1
+        for j in range(int(orient[piece])):
+            layout[piece].append(layout[piece].pop(0))
+        piece += 1
     return layout
 
  
-# Puzzle pieces
+# Define Puzzle pieces
 p103 = [2, 1,-2]
 p271 = [2,-1,-2]
 p001 = [1, 1,-1]
@@ -151,78 +155,46 @@ p144 = [2,-2,-2]
 p063 = [1,-1,-1]
 
 pieces = [p103,p271,p001,p250,p116,p130,p144,p063]
-upper4 = pieces[0:4]
-lower4 = pieces[4:8]
-# print(f"upper = {upper4}")
-# print(f"lower = {lower4}")
-# print(f"lower reversed = {reverse(lower4)}")
-# print(f"lower = {lower4}")
  
 # Get all layout permutations of pieces
+'''We use a permutation because the pieces could be in any order'''
 piecePerms = permutations(pieces)
-spinProduct = product('012',repeat=8)
+# total number of piece layout permutations
 piecePermsCount = len(list(permutations(pieces)))
-spinProductCount = len(list(product('012',repeat=8)))
-totalCount = spinProductCount*piecePermsCount
-print(f"Spin Orientations = {spinProductCount}")
 print(f"Layout Permutations = {piecePermsCount}")
-print(f"Total Possibilities = {totalCount}")
 
-# spinCount = 0
-# for orient in spinProduct:
-#     spinCount += 1
-#     print(orient)
-# print(f"Spin Orientations = {spinCount}")
+# Get the cartesian product of possible spin orientations
+'''We use a cartesian product because each of the 8 pieces has 3 possible spin orientations'''
+spinProduct = product('012',repeat=8)
+# total number of cartesian product spin orientations
+spinProductCount = len(list(product('012',repeat=8)))
+print(f"Spin Orientations = {spinProductCount}")
 
-# layoutCount = 0
-# # Print the obtained permutations
-# for layout in list(piecePerms):
-#     layoutCount += 1
-# print(f"permutations = {layoutCount}")
+# total number of possible configurations to check
+totalCount = spinProductCount*piecePermsCount
+print(f"Total Configurations = {totalCount}")
 
-# print(f"total iterations = {layoutCount*spinCount}")
 
-t0 = time.time()
-iterCount = 0
-solCount = 0
+t0 = time.time() # starting time for solution checking
+iterCount = 0 # keep track of the iteration number
+solCount = 0 # keep track of ow many solutions have been found
 for layout in list(piecePerms):
+    # print which iteration currently on for program execution status
     print(f"iteration = {iterCount}/{totalCount} ({round(100*iterCount/totalCount,2)}%)", end='\r')
-    upper = copy.deepcopy(layout[0:4])
-    lower = copy.deepcopy(layout[4:8]) 
-    # print(f"layout before reverse = {layout}")
-    Reverse(lower) # bottom 4 pieces are spun 180 for ease of visualization
-    reversedLayout = (upper[0],upper[1],upper[2],upper[3],lower[0],lower[1],lower[2],lower[3])
-    # print(f"layout after reverse = {layout}")
-    # print(layout)
-    # print(f"upper = {upper}")
-    # print(f"lower = {lower}")
 
+    # Have to reset the iterator as it is consumed each loop: https://stackoverflow.com/a/3266353
     spinProduct = product('012',repeat=8)
     for orient in spinProduct:
         iterCount += 1
-        tempLayout = copy.deepcopy(reversedLayout)
-        # print(f"layout     before spin = {reversedLayout}")
-        # print(f"tempLayout before spin = {tempLayout}")
-        # print()
-        Spin(tempLayout,orient) # TODO: this should work on a copy of the object
-        # print(f"layout     after spin = {reversedLayout}")
-        # print(f"tempLayout after spin = {tempLayout}")
-        # print()
-        # print(f"spin = {orient}")
-        # print(f"layout after spin = {layout}")
+        # we must deep copy for each orientation, otherwise pieces will not be reset after spinning in place
+        tempLayout = copy.deepcopy(layout) 
+        Spin(tempLayout,orient)
         sol = TestSolution(tempLayout)
         if sol: 
             solCount += 1
             print()
             print(f"Solution #{solCount} = {sol}")
-            print(f"Time to solution #{solCount} = {round(time.time() - t0, 3)} seconds")
-            # break
-    else:
-        # print(spinChecks)
-        continue  # only executed if the inner loop did NOT break
-    break  # only executed if the inner loop DID break
+            print(f"Time to solution #{solCount} = {round(time.time() - t0, 1)} seconds")
+
 t1 = time.time()
 print(f"Total time for all iterations = {round(t1-t0,3)}s")
-
-# print(f"Stopped on iteration {iterCount} out of a total possible {totalCount}")
-# TODO: compile and run this so that it is much faster
