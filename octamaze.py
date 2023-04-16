@@ -8,7 +8,6 @@ from itertools import permutations,product
 import copy
 import time
 
-
 # Program Description
 '''
 This program uses brute force to attempt assembling Pavel's Puzzles' Octamaze octahedron.
@@ -173,7 +172,7 @@ print(f"Spin Orientations = {spinProductCount}")
 # total number of possible configurations to check
 totalCount = spinProductCount*piecePermsCount
 print(f"Total Configurations = {totalCount}")
-
+print()
 
 t0 = time.time() # starting time for solution checking
 iterCount = 0 # keep track of the iteration number
@@ -195,6 +194,7 @@ for layout in list(piecePerms):
             print()
             print(f"Solution #{solCount} = {sol}")
             print(f"Time to solution #{solCount} = {round(time.time() - t0, 1)} seconds")
+            print()
 
 t1 = time.time()
 print(f"Total time for all iterations = {round(t1-t0,3)}s")
