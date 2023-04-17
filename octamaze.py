@@ -94,7 +94,6 @@ The letters now refer to different pieces than before, but that is okay as they 
 
 # Tests for the solution criteria
 def TestSolution(pieces):
-    solved=0
     A=pieces[0]
     B=pieces[1]
     C=pieces[2]
@@ -117,8 +116,7 @@ def TestSolution(pieces):
         G[2] + H[0] == 0 and
         H[2] + E[0] == 0    
         ):
-        solved = 1
-    if solved: return pieces
+        return pieces
     else: return
 
 
