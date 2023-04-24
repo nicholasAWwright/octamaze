@@ -7,6 +7,7 @@
 from itertools import permutations,product
 import copy
 import time
+import multiprocessing
 
 # Program Description
 '''
@@ -93,7 +94,11 @@ The letters now refer to different pieces than before, but that is okay as they 
 '''
 
 # Tests for the solution criteria
+<<<<<<< HEAD
 def TestSolution(pieces):
+=======
+def test_solution(pieces):
+>>>>>>> 34193a403991fe85fbfd6891989bee0164f98f76
     A=pieces[0]
     B=pieces[1]
     C=pieces[2]
@@ -117,12 +122,16 @@ def TestSolution(pieces):
         H[2] + E[0] == 0    
         ):
         return pieces
+<<<<<<< HEAD
     else: return
+=======
+    else: return 0
+>>>>>>> 34193a403991fe85fbfd6891989bee0164f98f76
 
 
 # Function for flipping pieces in place
 # (Problem forumlation updated to avoid flipping)
-def Flip(pieces):
+def flip(pieces):
     for piece in pieces:
         first=piece[0]
         last=piece[2]
@@ -132,7 +141,7 @@ def Flip(pieces):
 
 
 # Function to spin pieces in place
-def Spin(layout,orient):
+def spin(layout,orient):
     piece = 0
     for i in layout:
         for j in range(int(orient[piece])):
@@ -140,59 +149,103 @@ def Spin(layout,orient):
         piece += 1
     return layout
 
- 
-# Define Puzzle pieces
-p103 = [2, 1,-2]
-p271 = [2,-1,-2]
-p001 = [1, 1,-1]
-p250 = [1,-1, 2]
-p116 = [1,-2,-1]
-p130 = [2,-2, 2]
-p144 = [2,-2,-2]
-p063 = [1,-1,-1]
 
-pieces = [p103,p271,p001,p250,p116,p130,p144,p063]
- 
-# Get all layout permutations of pieces
-'''We use a permutation because the pieces could be in any order'''
-piecePerms = permutations(pieces)
-# total number of piece layout permutations
-piecePermsCount = len(list(permutations(pieces)))
-print(f"Layout Permutations = {piecePermsCount}")
-
-# Get the cartesian product of possible spin orientations
-'''We use a cartesian product because each of the 8 pieces has 3 possible spin orientations'''
-spinProduct = product('012',repeat=8)
-# total number of cartesian product spin orientations
-spinProductCount = len(list(product('012',repeat=8)))
-print(f"Spin Orientations = {spinProductCount}")
-
-# total number of possible configurations to check
-totalCount = spinProductCount*piecePermsCount
-print(f"Total Configurations = {totalCount}")
-print()
-
-t0 = time.time() # starting time for solution checking
-iterCount = 0 # keep track of the iteration number
-solCount = 0 # keep track of ow many solutions have been found
-for layout in list(piecePerms):
-    # print which iteration currently on for program execution status
-    print(f"iteration = {iterCount}/{totalCount} ({round(100*iterCount/totalCount,2)}%)", end='\r')
-
+def check_layout(layout):
     # Have to reset the iterator as it is consumed each loop: https://stackoverflow.com/a/3266353
     spinProduct = product('012',repeat=8)
+    global iterCount
+    global totalCount
+    global solCount
+    global t0
+    global layoutCount
+    with iterCount.get_lock():
+            iterCount.value += 1
+            if (iterCount.value%100 == 0):
+                # print which iteration currently on for program execution status
+                print(f"iteration = {iterCount.value}/{layoutCount} ({round(100*iterCount.value/layoutCount,2)}%)", end='\r')
+    # print(iterCount.value)
     for orient in spinProduct:
-        iterCount += 1
+        # # incrementing this variable each loop slows down execution considerably
+        # with iterCount.get_lock():
+        #     iterCount.value += 1
+        #     if (iterCount.value%10000 == 0):
+        #         # print which iteration currently on for program execution status
+        #         print(f"iteration = {iterCount.value}/{totalCount} ({round(100*iterCount.value/totalCount,2)}%)", end='\r')
         # we must deep copy for each orientation, otherwise pieces will not be reset after spinning in place
-        tempLayout = copy.deepcopy(layout) 
-        Spin(tempLayout,orient)
-        sol = TestSolution(tempLayout)
+        tempLayout = copy.deepcopy(layout)
+        spin(tempLayout,orient)
+        sol = test_solution(tempLayout)
+        # print(iterCount)
         if sol: 
-            solCount += 1
+            with solCount.get_lock():
+                solCount.value += 1
             print()
-            print(f"Solution #{solCount} = {sol}")
-            print(f"Time to solution #{solCount} = {round(time.time() - t0, 1)} seconds")
+            print(f"Solution #{solCount.value} = {sol}")
+            print(f"Time to solution #{solCount.value} = {round(time.time() - t0, 1)}s")
             print()
+   
 
-t1 = time.time()
-print(f"Total time for all iterations = {round(t1-t0,3)}s")
+def defineLayouts(): 
+    # Define Puzzle pieces
+    p103 = [2, 1,-2]
+    p271 = [2,-1,-2]
+    p001 = [1, 1,-1]
+    p250 = [1,-1, 2]
+    p116 = [1,-2,-1]
+    p130 = [2,-2, 2]
+    p144 = [2,-2,-2]
+    p063 = [1,-1,-1]
+
+    pieces = [p103,p271,p001,p250,p116,p130,p144,p063]
+ 
+    # Get all layout permutations of pieces
+    '''We use a permutation because the pieces could be in any order'''
+    piecePerms = permutations(pieces)
+    # total number of piece layout permutations
+    global layoutCount
+    layoutCount = len(list(permutations(pieces)))
+    print(f"Layout Permutations = {layoutCount}")
+
+    # Get the cartesian product of possible spin orientations
+    '''We use a cartesian product because each of the 8 pieces has 3 possible spin orientations'''
+    spinProduct = product('012',repeat=8)
+    # total number of cartesian product spin orientations
+    spinProductCount = len(list(product('012',repeat=8)))
+    print(f"spin Orientations = {spinProductCount}")
+
+    # total number of possible configurations to check
+    global totalCount
+    totalCount = spinProductCount*layoutCount
+    print(f"Total Configurations = {totalCount}")
+    print()
+
+    return piecePerms
+
+
+def initMulti(arg1,arg2,arg3,arg4,arg5):
+    ''' store the counter for later use '''
+    global iterCount
+    global totalCount
+    global solCount
+    global t0
+    global layoutCount
+    iterCount = arg1
+    totalCount = arg2
+    solCount = arg3
+    t0 = arg4
+    layoutCount = arg5
+
+if __name__ == '__main__':
+    # source: https://docs.python.org/3/library/multiprocessing.html
+    # source: https://stackoverflow.com/questions/2080660/how-to-increment-a-shared-counter-from-multiple-processes
+    global t0
+    t0 = time.time()
+    layouts = defineLayouts()
+    iterCount = multiprocessing.Value('i', 0)
+    solCount = multiprocessing.Value('i', 0)
+    
+    with multiprocessing.Pool(initializer = initMulti, initargs = (iterCount,totalCount,solCount,t0,layoutCount)) as allCores:
+        allCores.map(check_layout, list(layouts))
+    
+    t1 = time.time()
+    print(f"Total time for all iterations = {round(t1-t0,3)}s")
