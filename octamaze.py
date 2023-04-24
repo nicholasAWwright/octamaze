@@ -94,11 +94,7 @@ The letters now refer to different pieces than before, but that is okay as they 
 '''
 
 # Tests for the solution criteria
-<<<<<<< HEAD
-def TestSolution(pieces):
-=======
 def test_solution(pieces):
->>>>>>> 34193a403991fe85fbfd6891989bee0164f98f76
     A=pieces[0]
     B=pieces[1]
     C=pieces[2]
@@ -122,11 +118,7 @@ def test_solution(pieces):
         H[2] + E[0] == 0    
         ):
         return pieces
-<<<<<<< HEAD
-    else: return
-=======
     else: return 0
->>>>>>> 34193a403991fe85fbfd6891989bee0164f98f76
 
 
 # Function for flipping pieces in place
