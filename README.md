@@ -24,5 +24,5 @@ Python code for finding all assembly permutations of Pavel's Puzzles' Octamaze p
 
 ## Parallelized Code (Fastest)
 - Repeat the steps above and substitute `octamaze-par.py` when using the interpreter to call the script
-- E.g. `python ocatmaze-par.py` or `python octamaze-par.py`
-- The PyPy interpreter is still faster
+- E.g. `python octamaze-par.py` or `pypy octamaze-par.py`
+- The PyPy interpreter is still faster (my current machine runs `pypy octamaze-par.py` in just under 1 minute)
